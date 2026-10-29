@@ -1,0 +1,24 @@
+# Render Blueprint: one web service (API + web app) and one PostgreSQL database.
+services:
+  - type: web
+    name: timetable-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase: {name: timetable-db, property: connectionString}
+      - key: SEED_ON_START
+        value: "true"        # loads sample data once; set to "false" for a clean install
+      - key: WEB_WORKERS
+        value: "2"
+      - key: SOLVER_WORKERS
+        value: "4"
+databases:
+  - name: timetable-db
+    plan: free
