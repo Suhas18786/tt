@@ -86,10 +86,11 @@ def build_context(db: Session, batch_ids: list, config: dict, assignment_ids: li
         if rb.classroom_id in rooms:
             rooms[rb.classroom_id].blocked.add((rb.day, rb.period))
 
-    # Faculty/rooms already committed in *other* published timetables are fixed obstacles.
+    # Faculty/rooms already used by *other* saved timetables (published or draft, for different batches) are
+    # fixed obstacles, so separately generated timetables can never collide. Throwaway previews are ignored.
     ext_fac, ext_room = set(), set()
     batch_set = set(batch_ids)
-    pubs = db.query(Generation).filter(Generation.status == "published").all()
+    pubs = db.query(Generation).filter(Generation.status.in_(("published", "draft"))).all()
     for g in pubs:
         if g.id == exclude_generation_id or batch_set & set(g.batch_ids or []):
             continue

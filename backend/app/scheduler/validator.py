@@ -58,11 +58,11 @@ def validate_placements(ctx: ProblemContext, placements: list, require_complete:
             if (pl.day, p) in fac.unavailable:
                 v.append(Violation("faculty_unavailable", f"{fac.name} is unavailable {ctx.slot_label(pl.day, p)}.", [pl.id]))
             if (pl.faculty_id, pl.day, p) in ctx.external_faculty_busy:
-                v.append(Violation("faculty_external_conflict", f"{fac.name} already teaches {ctx.slot_label(pl.day, p)} in a published timetable.", [pl.id]))
+                v.append(Violation("faculty_external_conflict", f"{fac.name} already teaches {ctx.slot_label(pl.day, p)} in another saved timetable.", [pl.id]))
             if (pl.day, p) in room.blocked:
                 v.append(Violation("room_unavailable", f"Room {room.label} is unavailable {ctx.slot_label(pl.day, p)}.", [pl.id]))
             if (pl.room_id, pl.day, p) in ctx.external_room_busy:
-                v.append(Violation("room_external_conflict", f"Room {room.label} is already used {ctx.slot_label(pl.day, p)} in a published timetable.", [pl.id]))
+                v.append(Violation("room_external_conflict", f"Room {room.label} is already used {ctx.slot_label(pl.day, p)} in another saved timetable.", [pl.id]))
             fac_slots[(pl.faculty_id, pl.day, p)].append(pl.id)
             batch_slots[(pl.batch_id, pl.day, p)].append(pl.id)
             room_slots[(pl.room_id, pl.day, p)].append(pl.id)

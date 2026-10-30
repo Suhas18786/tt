@@ -140,7 +140,7 @@ def explain_unscheduled(ctx: ProblemContext, s: SessionReq, issues: list) -> str
     if not time_options(ctx, s):
         return f"{f.name} has no free {s.duration}-period block (availability, breaks, blocked periods)."
     if not candidate_placements(ctx, s):
-        return "Eligible rooms are blocked or already used by published timetables in every slot the faculty can teach."
+        return "Eligible rooms are blocked or already used by other saved timetables in every slot the faculty can teach."
     related = [i["message"] for i in issues if i.get("severity") == "error" and (
         i.get("faculty_id") == f.id or i.get("batch_id") == b.id
         or i.get("room_type") == a.room_type or i.get("assignment_id") == a.id)]
