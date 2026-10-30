@@ -32,6 +32,7 @@ from ortools.sat.python import cp_model
 
 from .candidates import build_sessions, candidate_placements, explain_unscheduled, static_diagnostics
 from .context import Placement, ProblemContext
+from .greedy import greedy_schedule
 from .validator import validate_placements
 
 BIG = 10_000_000
@@ -60,6 +61,9 @@ def solve(ctx: ProblemContext, workers: int | None = None) -> SolveResult:
     issues = list(issues) + static_diagnostics(ctx, sessions)
     if not sessions:
         return SolveResult("complete", "NO_SESSIONS", [], [], issues, 0.0, 0.0, {"sessions": 0})
+
+    # A fast, always-valid starting timetable: used as a CP-SAT hint and as the fallback result.
+    seed_choice = greedy_schedule(ctx, sessions, seconds=min(8.0, max(1.0, ctx.time_limit / 4)))
 
     W = ctx.weights
     n_periods = max(p.index for p in ctx.periods) + 1
@@ -255,6 +259,13 @@ def solve(ctx: ProblemContext, workers: int | None = None) -> SolveResult:
                 model.Add(h >= _lin(batch_day_diff[(b, d)]))
             soft.append((W["difficulty"], h))
 
+    # ---- hint: start the search from the heuristic timetable ---------------------------
+    for s_ in sessions:
+        pick = seed_choice.get(s_.key)
+        model.AddHint(placed[s_.key], 1 if pick else 0)
+        for v, d, p0, r in opts[s_.key]:
+            model.AddHint(v, 1 if pick == (d, p0, r) else 0)
+
     # ---- objective ---------------------------------------------------------------------
     obj_terms = [(-BIG, placed[s.key]) for s in sessions] + soft
     model.Minimize(_lin(obj_terms) + BIG * len(sessions))  # = BIG*unplaced + soft cost (>= 0)
@@ -275,15 +286,25 @@ def solve(ctx: ProblemContext, workers: int | None = None) -> SolveResult:
     stats = {"sessions": len(sessions), "variables": n_vars, "soft_terms": len(soft),
              "wall_time": round(seconds, 3)}
 
-    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        issues.append({"severity": "error", "code": "no_solution",
-                       "message": ("The solver found no timetable within the time limit "
-                                   f"({ctx.time_limit}s, status {status_name}). Increase the time limit or relax constraints.")})
-        return SolveResult("no_solution", status_name, [], [], issues, None, seconds, stats)
+    solved = status in (cp_model.OPTIMAL, cp_model.FEASIBLE)
+    if not solved:
+        if not any(seed_choice.values()):
+            issues.append({"severity": "error", "code": "no_solution",
+                           "message": ("The solver found no timetable within the time limit "
+                                       f"({ctx.time_limit}s, status {status_name}). Increase the time limit or relax constraints.")})
+            return SolveResult("no_solution", status_name, [], [], issues, None, seconds, stats)
+        issues.append({"severity": "warning", "code": "fallback_scheduler",
+                       "message": (f"The optimiser did not finish within {ctx.time_limit}s (status {status_name}), so a fast heuristic "
+                                   "schedule is shown. It has no conflicts but is not optimised, and sessions listed as unscheduled "
+                                   "might still fit with more solver time. Raise the time limit or use a more powerful server.")})
+        status_name = "FALLBACK_HEURISTIC"
 
     placements, unscheduled = [], []
     for s in sessions:
-        chosen = next(((d, p, r) for v, d, p, r in opts[s.key] if solver.Value(v) == 1), None)
+        if solved:
+            chosen = next(((d, p, r) for v, d, p, r in opts[s.key] if solver.Value(v) == 1), None)
+        else:
+            chosen = seed_choice.get(s.key)
         if chosen is None:
             unscheduled.append({
                 "assignment_id": s.assignment.id, "session": s.label(),
@@ -301,9 +322,11 @@ def solve(ctx: ProblemContext, workers: int | None = None) -> SolveResult:
     if bad:
         raise RuntimeError("Solver produced an invalid timetable: " + "; ".join(x.message for x in bad[:5]))
 
-    objective = solver.ObjectiveValue()
-    stats["soft_cost"] = round(objective - BIG * len(unscheduled), 3)
-    stats["best_bound"] = solver.BestObjectiveBound()
+    objective = None
+    if solved:
+        objective = solver.ObjectiveValue()
+        stats["soft_cost"] = round(objective - BIG * len(unscheduled), 3)
+        stats["best_bound"] = solver.BestObjectiveBound()
     if unscheduled:
         issues.append({"severity": "error", "code": "unscheduled",
                        "message": f"{len(unscheduled)} session(s) could not be scheduled; see the unscheduled list."})
