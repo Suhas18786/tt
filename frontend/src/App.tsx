@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth";
-import { Spinner } from "./ui";
+import { LogoMark, Spinner } from "./ui";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
@@ -17,49 +17,60 @@ import MyTimetable from "./pages/MyTimetable";
 import MyAvailability from "./pages/MyAvailability";
 import ConflictReports from "./pages/ConflictReports";
 
-const ADMIN_NAV: [string, string][] = [
-  ["/", "Dashboard"], ["/generator", "Generate timetable"], ["/timetables", "Timetables"], ["/reports", "Reports"],
-  ["/faculty", "Faculty"], ["/subjects", "Subjects"], ["/batches", "Student batches"], ["/assignments", "Teaching assignments"],
-  ["/rooms", "Classrooms & labs"], ["/setup", "Departments & terms"], ["/conflicts", "Conflict reports"],
+type NavGroup = { title: string; items: [string, string][] };
+const ADMIN_NAV: NavGroup[] = [
+  { title: "Schedule", items: [["/", "Dashboard"], ["/generator", "Generate timetable"], ["/timetables", "Timetables"], ["/reports", "Reports"], ["/conflicts", "Conflict reports"]] },
+  { title: "Data", items: [["/faculty", "Faculty"], ["/subjects", "Subjects"], ["/batches", "Student batches"], ["/assignments", "Teaching assignments"], ["/rooms", "Classrooms & labs"], ["/setup", "Departments & terms"]] },
 ];
-const FACULTY_NAV: [string, string][] = [
-  ["/", "My timetable"], ["/availability", "My availability"], ["/conflicts", "Report a conflict"],
+const FACULTY_NAV: NavGroup[] = [
+  { title: "My schedule", items: [["/", "My timetable"], ["/availability", "My availability"], ["/conflicts", "Report a conflict"]] },
 ];
 
 function Shell() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const loc = useLocation();
-  const nav = user?.role === "admin" ? ADMIN_NAV : FACULTY_NAV;
+  const groups = user?.role === "admin" ? ADMIN_NAV : FACULTY_NAV;
+  const initials = (user?.full_name ?? "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   return (
     <div className="flex min-h-screen">
       {open && <div className="fixed inset-0 z-30 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-brand-900 text-brand-100 transition-transform lg:static lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
         aria-label="Main navigation">
-        <div className="flex items-center gap-2 px-5 py-5 text-white">
-          <svg width="28" height="28" viewBox="0 0 100 100"><rect width="100" height="100" rx="18" fill="#2f6bb3" /><path d="M22 30h56M22 50h56M22 70h56M40 22v56M62 22v56" stroke="white" strokeWidth="6" fill="none" /></svg>
-          <div className="leading-tight"><div className="font-semibold">Timetable</div><div className="text-xs text-brand-200">University scheduler</div></div>
+        <div className="flex items-center gap-2.5 px-5 py-5">
+          <LogoMark />
+          <div className="font-display text-lg font-bold leading-none text-slate-900">Timetable</div>
         </div>
-        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
-          {nav.map(([to, label]) => (
-            <NavLink key={to} to={to} end={to === "/"} onClick={() => setOpen(false)}
-              className={({ isActive }) => `block rounded-md px-3 py-2 text-sm font-medium ${isActive ? "bg-brand-700 text-white" : "hover:bg-brand-800 hover:text-white"}`}>
-              {label}
-            </NavLink>
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+          {groups.map((g) => (
+            <div key={g.title}>
+              <p className="px-3 pb-1.5 text-xs font-semibold text-slate-400">{g.title}</p>
+              <div className="space-y-0.5">
+                {g.items.map(([to, label]) => (
+                  <NavLink key={to} to={to} end={to === "/"} onClick={() => setOpen(false)}
+                    className={({ isActive }) => `block rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? "bg-brand-50 font-semibold text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}>
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
-        <div className="border-t border-brand-800 p-4 text-sm">
-          <div className="truncate font-medium text-white">{user?.full_name}</div>
-          <div className="truncate text-xs capitalize text-brand-200">{user?.role} · {user?.email}</div>
-          <button onClick={logout} className="mt-3 w-full rounded-md border border-brand-700 px-3 py-1.5 text-sm hover:bg-brand-800">Sign out</button>
+        <div className="m-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+          <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">{initials}</div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-sm font-semibold text-slate-900">{user?.full_name}</div>
+            <div className="truncate text-xs capitalize text-slate-500">{user?.role}</div>
+          </div>
+          <button onClick={logout} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-white hover:text-slate-900" aria-label="Sign out">Sign out</button>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
           <button className="btn-secondary !px-2.5" onClick={() => setOpen(true)} aria-label="Open menu">☰</button>
-          <span className="font-semibold">Timetable Generator</span>
+          <LogoMark size={26} /><span className="font-display font-bold">Timetable</span>
         </header>
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8" key={loc.pathname}><Outlet /></main>
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-10" key={loc.pathname}><div className="mx-auto max-w-[1400px]"><Outlet /></div></main>
       </div>
     </div>
   );

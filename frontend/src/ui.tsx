@@ -14,8 +14,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="text-[1.7rem] font-bold leading-tight text-slate-900">{title}</h1>
+        {subtitle && <p className="mt-1 max-w-2xl text-sm text-slate-500">{subtitle}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-2">{actions}</div>
     </div>
@@ -126,11 +126,11 @@ export function Pagination({ page, pageSize, total, onPage }: { page: number; pa
 }
 
 export function StatCard({ label, value, sub, tone = "brand" }: { label: string; value: ReactNode; sub?: string; tone?: "brand" | "green" | "red" | "amber" }) {
-  const ring = { brand: "border-l-brand-600", green: "border-l-emerald-500", red: "border-l-red-500", amber: "border-l-amber-500" }[tone];
+  const dot = { brand: "bg-brand-500", green: "bg-emerald-500", red: "bg-red-500", amber: "bg-amber-500" }[tone];
   return (
-    <div className={`card border-l-4 ${ring} p-4`}>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
+    <div className="card p-4">
+      <p className="flex items-center gap-2 text-sm font-medium text-slate-500"><span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />{label}</p>
+      <p className="mt-2 font-display text-3xl font-bold tracking-tight text-slate-900">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
     </div>
   );
@@ -166,5 +166,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ))}
       </div>
     </ToastCtx.Provider>
+  );
+}
+
+export function LogoMark({ size = 30 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
+      <rect width="32" height="32" rx="8" fill="#2535ae" />
+      <rect x="6" y="6" width="9" height="9" rx="2" fill="#fff" />
+      <rect x="17" y="6" width="9" height="5" rx="2" fill="#8fa0ff" />
+      <rect x="6" y="17" width="5" height="9" rx="2" fill="#8fa0ff" />
+      <rect x="13" y="17" width="13" height="9" rx="2" fill="#fff" opacity=".9" />
+    </svg>
   );
 }

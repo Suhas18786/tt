@@ -4,9 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { 50: "#eef4fb", 100: "#d9e6f5", 200: "#b6cfec", 500: "#2f6bb3", 600: "#235a9c", 700: "#1c4a82", 800: "#173c68", 900: "#12304f", 950: "#0c2038" },
+        brand: { 50: "#eef1ff", 100: "#dfe5ff", 200: "#c2ccff", 500: "#4257e6", 600: "#3043d1", 700: "#2535ae", 800: "#1f2c8a", 900: "#151d5e", 950: "#0d1240" },
+        paper: "#f6f7fb",
       },
-      fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "sans-serif"] },
+      fontFamily: {
+        sans: ["Figtree", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["Bricolage Grotesque", "Figtree", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      boxShadow: { card: "0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.04)", pop: "0 12px 32px -8px rgba(21,29,94,.25)" },
     },
   },
   plugins: [],
