@@ -30,7 +30,7 @@ export interface Generation {
   config?: { working_days: number[]; periods: Period[]; blocked_slots: number[][] };
   report?: { complete: boolean; issues: Issue[]; unscheduled: Unscheduled[]; stats: Record<string, number>; expected_sessions: number };
   sessions?: Session[];
-  workload?: { faculty_id: number; faculty_name: string; hours: number; max_hours_per_week: number }[];
+  workload?: { faculty_id: number; faculty_name: string; hours: number; required: number; max_hours_per_week: number }[];
   validation?: { ok: boolean; violations: Violation[]; unscheduled: number };
 }
 export interface Page<T> { items: T[]; total: number; page: number; page_size: number }

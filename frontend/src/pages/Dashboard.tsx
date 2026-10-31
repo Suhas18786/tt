@@ -8,7 +8,7 @@ interface Dash {
   open_conflict_reports: number;
   generation: { id: number; name: string; status: string; solver_status: string; solve_seconds: number | null } | null;
   sessions: { scheduled: number; unscheduled: number; expected: number };
-  workload: { faculty_id: number; faculty_name: string; hours: number; max_hours_per_week: number }[];
+  workload: { faculty_id: number; faculty_name: string; hours: number; required: number; max_hours_per_week: number }[];
   room_utilization: { room_id: number; room: string; used: number; capacity: number; percent: number }[];
   conflicts: { code: string; message: string }[];
   issues: { severity: string; message: string }[];
@@ -23,7 +23,7 @@ export default function Dashboard() {
   if (!d) return <div className="p-10 text-center"><Spinner className="h-7 w-7" /></div>;
   const g = d.generation;
   const pct = d.sessions.expected ? Math.round((100 * d.sessions.scheduled) / d.sessions.expected) : 0;
-  const maxH = Math.max(1, ...d.workload.map((w) => Math.max(w.hours, w.max_hours_per_week)));
+  const maxH = Math.max(1, ...d.workload.map((w) => Math.max(w.hours, w.required, w.max_hours_per_week)));
 
   return (
     <div>
@@ -64,12 +64,12 @@ export default function Dashboard() {
           </div>
 
           <div className="card p-4 lg:col-span-2">
-            <h2 className="mb-3 font-semibold">Faculty workload distribution <span className="text-xs font-normal text-slate-500">(hours scheduled / weekly limit)</span></h2>
-            {d.workload.length === 0 ? <p className="text-sm text-slate-500">No sessions scheduled.</p> : (
+            <h2 className="mb-3 font-semibold">Faculty workload distribution <span className="text-xs font-normal text-slate-500">(hours scheduled of required, against the weekly limit)</span></h2>
+            {d.workload.length === 0 ? <p className="text-sm text-slate-500">No teaching assignments in this timetable.</p> : (
               <ul className="max-h-80 space-y-2.5 overflow-y-auto pr-2">
                 {d.workload.map((w) => (
                   <li key={w.faculty_id}>
-                    <div className="flex justify-between text-sm"><span>{w.faculty_name}</span><span className="text-slate-500">{w.hours}/{w.max_hours_per_week}</span></div>
+                    <div className="flex justify-between text-sm"><span>{w.faculty_name}</span><span className="text-slate-500">{w.hours} of {w.required} scheduled · limit {w.max_hours_per_week}</span></div>
                     <Bar value={w.hours} max={maxH} tone={w.hours > w.max_hours_per_week ? "bg-red-500" : "bg-brand-600"} label={w.faculty_name} />
                   </li>
                 ))}

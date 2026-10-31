@@ -131,14 +131,31 @@ def serialize_sessions(db: Session, sessions: list) -> list:
     return out
 
 
-def workload_rows(db: Session, sessions: list) -> list:
-    by_fac = defaultdict(int)
+def workload_rows(db: Session, sessions: list, gen: Generation | None = None) -> list:
+    """Per-faculty teaching load: hours scheduled so far and hours required by their assignments.
+
+    Built from the assignments in the timetable's scope (not only from placed sessions), so every teacher
+    appears even when little or nothing could be scheduled.
+    """
+    scheduled = defaultdict(int)
     for s in sessions:
-        by_fac[s["faculty_id"]] += s["duration"]
-    facs = {f.id: f for f in db.query(Faculty).filter(Faculty.id.in_(list(by_fac) or [0]))}
-    return sorted(({"faculty_id": f, "faculty_name": facs[f].full_name, "hours": h,
-                    "max_hours_per_week": facs[f].max_hours_per_week} for f, h in by_fac.items()),
-                  key=lambda r: -r["hours"])
+        scheduled[s["faculty_id"]] += s["duration"]
+    required = defaultdict(int)
+    if gen is not None:
+        q = (db.query(TeachingAssignment.faculty_id, Subject.weekly_hours)
+             .join(Subject, Subject.id == TeachingAssignment.subject_id)
+             .filter(TeachingAssignment.batch_id.in_(list(gen.batch_ids or [0]))))
+        ids = (gen.config or {}).get("assignment_ids")
+        if ids:
+            q = q.filter(TeachingAssignment.id.in_(ids))
+        for fid, hours in q.all():
+            required[fid] += hours
+    fids = set(scheduled) | set(required)
+    facs = {f.id: f for f in db.query(Faculty).filter(Faculty.id.in_(list(fids) or [0]))}
+    rows = [{"faculty_id": f, "faculty_name": facs[f].full_name, "hours": scheduled.get(f, 0),
+             "required": required.get(f, scheduled.get(f, 0)), "max_hours_per_week": facs[f].max_hours_per_week}
+            for f in fids if f in facs]
+    return sorted(rows, key=lambda r: (-r["required"], -r["hours"], r["faculty_name"]))
 
 
 def serialize_generation(db: Session, gen: Generation, detail: bool = True) -> dict:
@@ -157,7 +174,7 @@ def serialize_generation(db: Session, gen: Generation, detail: bool = True) -> d
         out.update({
             "config": {"working_days": gen.config["working_days"], "periods": gen.config["periods"],
                        "blocked_slots": gen.config.get("blocked_slots", [])},
-            "report": gen.report, "sessions": sessions, "workload": workload_rows(db, sessions),
+            "report": gen.report, "sessions": sessions, "workload": workload_rows(db, sessions, gen),
             "validation": {"ok": not violations and not gen.report.get("unscheduled"),
                            "violations": [v.as_dict() for v in violations],
                            "unscheduled": len(gen.report.get("unscheduled", []))},

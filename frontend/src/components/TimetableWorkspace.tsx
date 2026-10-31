@@ -100,7 +100,7 @@ export default function TimetableWorkspace({ id, onRegenerate, onDeleted, regene
   if (!gen) return error ? <ErrorBanner error={error} /> : <div className="p-10 text-center text-slate-400"><Spinner className="h-7 w-7" /></div>;
   const rep = gen.report;
   const canPublish = !!rep?.complete && (gen.status === "preview" || gen.status === "draft") && gen.validation?.ok;
-  const maxHours = Math.max(1, ...(gen.workload ?? []).map((w) => Math.max(w.hours, w.max_hours_per_week)));
+  const maxHours = Math.max(1, ...(gen.workload ?? []).map((w) => Math.max(w.hours, w.required, w.max_hours_per_week)));
 
   return (
     <div className="space-y-5">
@@ -199,17 +199,17 @@ export default function TimetableWorkspace({ id, onRegenerate, onDeleted, regene
             </>}
         </div>
         <div className="card p-4">
-          <h3 className="mb-2 font-semibold">Faculty weekly teaching hours</h3>
+          <h3 className="mb-2 font-semibold">Faculty weekly teaching hours <span className="text-xs font-normal text-slate-500">(scheduled of required)</span></h3>
           {gen.workload && gen.workload.length > 0 ? (
             <ul className="max-h-64 space-y-2 overflow-y-auto pr-1">
               {gen.workload.map((w) => (
                 <li key={w.faculty_id}>
-                  <div className="flex justify-between text-sm"><span>{w.faculty_name}</span><span className="text-slate-500">{w.hours} / {w.max_hours_per_week} h</span></div>
+                  <div className="flex justify-between text-sm"><span>{w.faculty_name}</span><span className="text-slate-500">{w.hours} of {w.required} h scheduled · limit {w.max_hours_per_week}</span></div>
                   <Bar value={w.hours} max={maxHours} tone={w.hours > w.max_hours_per_week ? "bg-red-500" : "bg-brand-600"} label={w.faculty_name} />
                 </li>
               ))}
             </ul>
-          ) : <p className="text-sm text-slate-500">No sessions scheduled.</p>}
+          ) : <p className="text-sm text-slate-500">No teaching assignments in this timetable.</p>}
         </div>
       </div>
 
