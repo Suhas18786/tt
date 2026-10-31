@@ -1,0 +1,59 @@
+programme,course_code,course_title
+AE,AUC301B,Design of Automotive Components
+AE,AUC302A,"Automotive, Noise, Vibration and Harshness"
+AE,AUC303A,Vehicle Aerodynamics
+AE,AUC304A,Automotive Electronics and Electrical System
+AE,AAD305A,Control Systems Engineering
+AS,ASC301A,Compressible Aerodynamics
+AS,ASC302A,Aerospace Structures
+AS,ASC303A,Computational Fluid Dynamics
+AS,ASC304A,Aerospace Propulsion - 2
+AS,AAD305A,Control Systems Engineering
+CE,CEC301A,Design of RCC Elements
+CE,CEC302A,Structural Analysis-2
+CE,CEC303A,Geotechnical Engineering-1
+CE,CEC304A,Hydrology and Irrigation Engineering
+CE,CEC305A,Environmental Engineering
+CE,CEC305A,Design and Drawing of RCC Structures
+AI&ML,AIC301A,Basics of Operating Systems
+AI&ML,AIC305A,Basics of Graph Theory and Discrete Optimization
+AI&ML,AIC304A,Computer Vision & Applications
+AI&ML,AIC205A,Machine Learning-2
+AI&ML,CSD301A,Computer Networks
+CSE,MTE301B,Probability and Statistics
+CSE,CSC305A,Graph Theory and Discrete Optimization
+CSE,CSC204B,Formal Languages and Automata Theory
+CSE,CSC304A,Operating Systems
+CSE,CSD301A,Computer Networks
+IS&E,MTE301B,Probability and Statistics
+IS&E,ISC201A,Elements of Information Science
+IS&E,ISC302A,Data Processing
+IS&E,CSC304A,Operating Systems
+IS&E,CSD301A,Computer Networks
+M&C,AID201A,Artificial Intelligence
+M&C,CSC305A,Graph Theory and Discrete Optimization
+M&C,ISE302A,Data Processing
+M&C,MCC302B,Introduction to Differential Equations
+M&C,CSD301A,Computer Networks
+EC,ECC301A,Communication Theory and Systems
+EC,ECC302A,Digital Signal Processing
+EC,ECC304A,Network Analysis and Synthesis
+EC,ECC305A,FPGA Design
+EC,ECC303A,Control Systems
+EE,EEC301A,Transmission and Distribution
+EE,EEC303A,Power Electronics and Drives
+EE,EEC304A,PLC and SCADA
+EE,EEC305A,Electrical Machines
+EE,EEC302A,Control Systems
+ME,MEC302A,Thermal Engineering
+ME,MEC303A,Design of Machine Elements 1
+ME,MEC304A,Machine Dynamics-2
+ME,MEC305A,Additive Manufacturing
+ME,ROC301A,Control Systems and Engineering
+ME,MEC306A,AI for Mechanical Engineers
+RB,ROC302A,Robotic System Design
+RB,ROC303A,Embedded Processor and Controllers
+RB,ROC304A,Design of Robotic Components
+RB,ROC305A,Robot Vision
+RB,ROC301A,Control Systems and Engineering
+RB,ROC306A,Industrial Robotics and Automation
