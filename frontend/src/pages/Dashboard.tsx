@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
-import { Badge, Bar, EmptyState, ErrorBanner, PageHeader, Spinner, StatCard } from "../ui";
+import { useLookups } from "../lookups";
+import { Badge, Bar, EmptyState, ErrorBanner, PageHeader, Spinner, StatCard, useToast } from "../ui";
 
 interface Dash {
   counts: { faculty: number; subjects: number; batches: number; classrooms: number; laboratories: number };
@@ -18,7 +19,19 @@ interface Dash {
 export default function Dashboard() {
   const [d, setD] = useState<Dash | null>(null);
   const [err, setErr] = useState<unknown>(null);
-  useEffect(() => { api<Dash>("/dashboard").then(setD).catch(setErr); }, []);
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+  const { reload } = useLookups();
+  const refresh = () => { api<Dash>("/dashboard").then(setD).catch(setErr); };
+  useEffect(refresh, []);
+  const loadSample = async () => {
+    setLoading(true);
+    try {
+      const r = await api<{ skipped: boolean; message: string; batches?: number; sessions?: number }>("/admin/load-btech-sample", { method: "POST" });
+      toast("success", r.skipped ? r.message : `${r.message} ${r.batches} batches, ${r.sessions} sessions to schedule.`);
+      await reload(); refresh();
+    } catch (x) { setErr(x); } finally { setLoading(false); }
+  };
   if (err) return <ErrorBanner error={err} />;
   if (!d) return <div className="p-10 text-center"><Spinner className="h-7 w-7" /></div>;
   const g = d.generation;
@@ -28,7 +41,9 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Overview of your institution's scheduling data and the latest timetable."
-        actions={<Link to="/generator" className="btn-primary">Generate timetable</Link>} />
+        actions={<>
+          <button className="btn-secondary" onClick={loadSample} disabled={loading}>{loading && <Spinner className="h-4 w-4" />}Load B.Tech 2024 sample</button>
+          <Link to="/generator" className="btn-primary">Generate timetable</Link></>} />
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Faculty" value={d.counts.faculty} />
         <StatCard label="Subjects" value={d.counts.subjects} />

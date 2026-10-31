@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import IntegrityError
 
 from .config import settings
-from .routers import auth, faculty_portal, master, reports, timetables
+from .routers import auth, faculty_portal, master, reports, sample_data, timetables
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("timetable")
@@ -21,7 +21,7 @@ app = FastAPI(title="University Automatic Timetable Generator", version="1.0.0",
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 
-for r in (auth.router, master.router, timetables.router, reports.router, faculty_portal.router):
+for r in (auth.router, master.router, timetables.router, reports.router, faculty_portal.router, sample_data.router):
     app.include_router(r, prefix="/api")
 
 
