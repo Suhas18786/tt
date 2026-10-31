@@ -18,8 +18,13 @@ export default function Reports() {
 
   useEffect(() => { api<Generation[]>("/timetables").then(setGens).catch(setErr); }, []);
   useEffect(() => {
+    let stale = false;
     setLoading(true); setRep(null);
-    api(`/reports/${kind}`, { params: { generation_id: genId } }).then((r) => { setRep(r); setErr(null); }).catch(setErr).finally(() => setLoading(false));
+    api(`/reports/${kind}`, { params: { generation_id: genId } })
+      .then((r) => { if (!stale) { setRep(r); setErr(null); } })
+      .catch((e) => { if (!stale) setErr(e); })
+      .finally(() => { if (!stale) setLoading(false); });
+    return () => { stale = true; };
   }, [kind, genId]);
 
   const exp = async (format: "pdf" | "xlsx", entity?: number) => {
@@ -39,13 +44,13 @@ export default function Reports() {
       </div>
       <ErrorBanner error={err} />
       {loading && <div className="p-10 text-center"><Spinner className="h-7 w-7" /></div>}
-      {rep && !loading && (
+      {rep && rep.kind === kind && !loading && (
         <>
           <p className="mb-3 text-sm text-slate-600">Source: <b>{rep.generation.name}</b> <Badge>{rep.generation.status}</Badge></p>
           {["faculty", "batch", "room", "department"].includes(kind) && (
             <div className="space-y-6">
-              {rep.groups.length === 0 && <div className="card"><EmptyState title="No sessions" /></div>}
-              {rep.groups.map((g: { id: number; title: string; sessions: Session[] }) => (
+              {(rep.groups ?? []).length === 0 && <div className="card"><EmptyState title="No sessions" /></div>}
+              {(rep.groups ?? []).map((g: { id: number; title: string; sessions: Session[] }) => (
                 <section key={g.id} className="card p-4">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <h2 className="font-semibold">{g.title} <span className="text-sm font-normal text-slate-500">· {g.sessions.reduce((a, s) => a + s.duration, 0)} periods/week</span></h2>
@@ -61,26 +66,26 @@ export default function Reports() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50"><tr><th className="th">Faculty</th>{DAYS.slice(0, 6).map((d) => <th key={d} className="th">{d.slice(0, 3)}</th>)}<th className="th">Total</th><th className="th">Limit</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
-                  {rep.rows.map((r: any) => (
+                  {(rep.rows ?? []).map((r: any) => (
                     <tr key={r.faculty_id}><td className="td font-medium">{r.faculty_name}</td>
                       {DAYS.slice(0, 6).map((_, i) => <td key={i} className="td">{r.per_day[i] ?? 0}</td>)}
                       <td className={`td font-semibold ${r.hours > r.max_hours_per_week ? "text-red-600" : ""}`}>{r.hours}</td><td className="td">{r.max_hours_per_week}</td></tr>
                   ))}
                 </tbody>
               </table>
-              {rep.rows.length === 0 && <EmptyState title="No sessions scheduled" />}
+              {(rep.rows ?? []).length === 0 && <EmptyState title="No sessions scheduled" />}
             </div>
           )}
           {kind === "unscheduled" && (
             <div className="space-y-5">
               <div className="card p-4"><h2 className="mb-2 font-semibold">Constraint violations</h2>
-                {rep.violations.length === 0 ? <p className="text-sm text-emerald-700">✓ No hard-constraint violations.</p>
-                  : <ul className="space-y-1 text-sm text-red-700">{rep.violations.map((v: Violation, i: number) => <li key={i}>✕ {v.message}</li>)}</ul>}</div>
+                {(rep.violations ?? []).length === 0 ? <p className="text-sm text-emerald-700">✓ No hard-constraint violations.</p>
+                  : <ul className="space-y-1 text-sm text-red-700">{(rep.violations ?? []).map((v: Violation, i: number) => <li key={i}>✕ {v.message}</li>)}</ul>}</div>
               <div className="card p-4"><h2 className="mb-2 font-semibold">Unscheduled subjects</h2>
-                {rep.unscheduled.length === 0 ? <p className="text-sm text-emerald-700">✓ Every required session is scheduled.</p>
-                  : <ul className="space-y-2 text-sm">{rep.unscheduled.map((u: Unscheduled, i: number) => <li key={i}><b>{u.subject_code} – {u.subject_name}</b> ({u.session}): <span className="text-red-700">{u.reason}</span></li>)}</ul>}</div>
-              {rep.issues.length > 0 && <div className="card p-4"><h2 className="mb-2 font-semibold">Diagnostics</h2>
-                <ul className="space-y-1 text-sm">{rep.issues.map((i: { severity: string; message: string }, k: number) => <li key={k}><span className="font-medium capitalize">{i.severity}:</span> {i.message}</li>)}</ul></div>}
+                {(rep.unscheduled ?? []).length === 0 ? <p className="text-sm text-emerald-700">✓ Every required session is scheduled.</p>
+                  : <ul className="space-y-2 text-sm">{(rep.unscheduled ?? []).map((u: Unscheduled, i: number) => <li key={i}><b>{u.subject_code} – {u.subject_name}</b> ({u.session}): <span className="text-red-700">{u.reason}</span></li>)}</ul>}</div>
+              {(rep.issues ?? []).length > 0 && <div className="card p-4"><h2 className="mb-2 font-semibold">Diagnostics</h2>
+                <ul className="space-y-1 text-sm">{(rep.issues ?? []).map((i: { severity: string; message: string }, k: number) => <li key={k}><span className="font-medium capitalize">{i.severity}:</span> {i.message}</li>)}</ul></div>}
             </div>
           )}
         </>
