@@ -42,30 +42,46 @@ def cell_text(s: dict, view: str) -> str:
     return f"{s['subject_code']}\n{s['batch_code']}\n{s['faculty_name']}\n{s['room_label']}"
 
 
-def build_grid(config: dict, sessions: list, view: str):
-    """Returns (header, rows, spans). rows[i] = [period label, cell per working day]."""
+def build_grid(config: dict, sessions: list, view: str, lab_column: bool = False):
+    """Returns (header, rows, spans). rows[i] = [period label, cell per working day].
+
+    With lab_column=True every day gets two columns, "Class" then "Lab"; sessions whose subject_type is
+    "lab" go in the second one (the same layout as the on-screen grid).
+    """
     days = config["working_days"]
     periods = config["periods"]
-    start_cells = {}
-    covered = set()
+    blocked = set(map(tuple, config.get("blocked_slots", [])))
+    kinds = (False, True) if lab_column else (False,)
+
+    def kind_of(s: dict) -> bool:
+        return lab_column and s.get("subject_type") == "lab"
+
+    start_cells, covered = {}, set()
     for s in sessions:
-        start_cells[(s["day"], s["start_period"])] = s
+        lab = kind_of(s)
+        start_cells[(s["day"], s["start_period"], lab)] = s
         for q in range(s["start_period"] + 1, s["start_period"] + s["duration"]):
-            covered.add((s["day"], q))
-    header = ["Period"] + [DAY_NAMES[d] for d in days]
+            covered.add((s["day"], q, lab))
+    header = ["Period"]
+    for d in days:
+        header.append(DAY_NAMES[d])
+        if lab_column:
+            header.append(f"{DAY_NAMES[d]} Lab")
     rows, spans = [], []
     for r, p in enumerate(periods):
         row = [f"{p['start']}-{p['end']}" + ("" if p.get("kind", "class") == "class" else f"\n({p['kind']})")]
-        for c, d in enumerate(days):
-            if p.get("kind", "class") != "class" or (d, p["index"]) in set(map(tuple, config.get("blocked_slots", []))):
-                row.append("")
-            elif (d, p["index"]) in start_cells:
-                s = start_cells[(d, p["index"])]
-                row.append(cell_text(s, view))
-                if s["duration"] > 1:
-                    spans.append((c + 1, r, c + 1, r + s["duration"] - 1))
-            else:
-                row.append("" if (d, p["index"]) in covered else "")
+        for di, d in enumerate(days):
+            for ki, lab in enumerate(kinds):
+                col = 1 + di * len(kinds) + ki
+                if p.get("kind", "class") != "class" or (d, p["index"]) in blocked:
+                    row.append("")
+                elif (d, p["index"], lab) in start_cells:
+                    s = start_cells[(d, p["index"], lab)]
+                    row.append(cell_text(s, view))
+                    if s["duration"] > 1:
+                        spans.append((col, r, col, r + s["duration"] - 1))
+                else:
+                    row.append("")
         rows.append(row)
     return header, rows, spans
 
@@ -91,7 +107,7 @@ def render_xlsx(gen: dict, view: str = "batch", entity_id: int | None = None) ->
         ws["A1"] = "No scheduled sessions"
     for _gid, title, sess in groups:
         ws = wb.create_sheet(_sheet_name(title, used))
-        header, rows, spans = build_grid(gen["config"], sess, view)
+        header, rows, spans = build_grid(gen["config"], sess, view, lab_column=True)
         ws["A1"] = f"{gen['name']} - {view.title()}: {title}"
         ws["A1"].font = Font(bold=True, size=13)
         for c, h in enumerate(header, start=1):
@@ -133,7 +149,7 @@ def render_pdf(gen: dict, view: str = "batch", entity_id: int | None = None) -> 
     if not groups:
         story.append(Paragraph("No scheduled sessions", styles["Heading2"]))
     for i, (_gid, title, sess) in enumerate(groups):
-        header, rows, spans = build_grid(gen["config"], sess, view)
+        header, rows, spans = build_grid(gen["config"], sess, view, lab_column=True)
         story.append(Paragraph(f"{gen['name']} &mdash; {view.title()}: {title}", styles["Heading2"]))
         story.append(Spacer(1, 6))
         data = [header] + [[Paragraph(c.replace("\n", "<br/>"), cell_style) if c else "" for c in row] for row in rows]
