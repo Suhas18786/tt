@@ -45,8 +45,8 @@ export function ErrorBanner({ error, onClose }: { error: unknown; onClose?: () =
           <p className="font-medium">{e.message || "Something went wrong"}</p>
           {e.violations?.length > 0 && (
             <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
-              {e.violations.slice(0, 8).map((v, i) => <li key={i}>{v.message}</li>)}
-              {e.violations.length > 8 && <li>…and {e.violations.length - 8} more</li>}
+              {e.violations.slice(0, 15).map((v, i) => <li key={i}>{v.message}</li>)}
+              {e.violations.length > 15 && <li>…and {e.violations.length - 15} more</li>}
             </ul>
           )}
         </div>

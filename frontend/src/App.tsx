@@ -16,11 +16,12 @@ import Reports from "./pages/Reports";
 import MyTimetable from "./pages/MyTimetable";
 import MyAvailability from "./pages/MyAvailability";
 import ConflictReports from "./pages/ConflictReports";
+import ImportData from "./pages/ImportData";
 
 type NavGroup = { title: string; items: [string, string][] };
 const ADMIN_NAV: NavGroup[] = [
   { title: "Schedule", items: [["/", "Dashboard"], ["/generator", "Generate timetable"], ["/timetables", "Timetables"], ["/reports", "Reports"], ["/conflicts", "Conflict reports"]] },
-  { title: "Data", items: [["/faculty", "Faculty"], ["/subjects", "Subjects"], ["/batches", "Student batches"], ["/assignments", "Teaching assignments"], ["/rooms", "Classrooms & labs"], ["/setup", "Departments & terms"]] },
+  { title: "Data", items: [["/faculty", "Faculty"], ["/subjects", "Subjects"], ["/batches", "Student batches"], ["/assignments", "Teaching assignments"], ["/rooms", "Classrooms & labs"], ["/setup", "Departments & terms"], ["/import", "Import from CSV"]] },
 ];
 const FACULTY_NAV: NavGroup[] = [
   { title: "My schedule", items: [["/", "My timetable"], ["/availability", "My availability"], ["/conflicts", "Report a conflict"]] },
@@ -114,6 +115,7 @@ export default function App() {
         <Route path="/assignments" element={A(<AssignmentsPage />)} />
         <Route path="/rooms" element={A(<RoomsPage />)} />
         <Route path="/setup" element={A(<Setup />)} />
+        <Route path="/import" element={A(<ImportData />)} />
         <Route path="/availability" element={<FacultyOnly><MyAvailability /></FacultyOnly>} />
         <Route path="/conflicts" element={<ConflictReports />} />
       </Route>
