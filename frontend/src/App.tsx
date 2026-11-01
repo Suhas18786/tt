@@ -17,6 +17,7 @@ import MyTimetable from "./pages/MyTimetable";
 import MyAvailability from "./pages/MyAvailability";
 import ConflictReports from "./pages/ConflictReports";
 import ImportData from "./pages/ImportData";
+import ChangePassword from "./components/ChangePassword";
 
 type NavGroup = { title: string; items: [string, string][] };
 const ADMIN_NAV: NavGroup[] = [
@@ -30,6 +31,7 @@ const FACULTY_NAV: NavGroup[] = [
 function Shell() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState(false);
   const loc = useLocation();
   const groups = user?.role === "admin" ? ADMIN_NAV : FACULTY_NAV;
   const initials = (user?.full_name ?? "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -63,8 +65,12 @@ function Shell() {
             <div className="truncate text-sm font-semibold text-slate-900">{user?.full_name}</div>
             <div className="truncate text-xs capitalize text-slate-500">{user?.role}</div>
           </div>
-          <button onClick={logout} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-white hover:text-slate-900" aria-label="Sign out">Sign out</button>
+          <div className="flex flex-col items-end">
+            <button onClick={() => setPw(true)} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-white hover:text-slate-900">Password</button>
+            <button onClick={logout} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-white hover:text-slate-900" aria-label="Sign out">Sign out</button>
+          </div>
         </div>
+        {pw && <ChangePassword onClose={() => setPw(false)} />}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
